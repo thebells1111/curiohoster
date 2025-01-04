@@ -8,6 +8,8 @@ import webhookCreate from "./webhook/create.js";
 import webhookSettle from "./webhook/settle.js";
 import logout from "./logout.js";
 import getToken from "./gettoken.js";
+import handlePayments from "./handlePayments.js";
+import payInvoice from "./payInvoice.js";
 
 import bodyParser from "body-parser";
 
@@ -26,6 +28,8 @@ const albyRoutes = (tempTokens) => {
   router.post("/refreshauth", bodyParser.json(), refreshauth);
   router.get("/account", refresh);
   router.post("/boost", bodyParser.json(), boost);
+  router.post("/handlePayments", bodyParser.json(), handlePayments);
+  router.post("/pay-invoice", bodyParser.json(), payInvoice);
   // router.get("/webhook", webhookGet);
   router.get("/webhook/create", webhookCreate);
   router.get("/logout", logout);
