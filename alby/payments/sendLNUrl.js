@@ -18,11 +18,12 @@ export default function sendLNUrl({ accessToken, recipient, id }) {
         throw new Error("Callback URL missing in LNURLP response");
       }
 
-      const invoiceRes = await fetch(
-        `${data.callback}?amount=${
-          recipient.amount * 1000
-        }&comment=${`${process.env.WEBHOOK_SERVER}/metadata/${id}`}`
-      );
+      const invoiceRes = await axios.get(`${data.callback}`, {
+        params: {
+          amount: recipient.amount * 1000,
+          comment: `${process.env.WEBHOOK_SERVER}/metadata/${id}`,
+        },
+      });
       const invoiceData = await invoiceRes.json();
       const invoice = invoiceData.pr;
 
