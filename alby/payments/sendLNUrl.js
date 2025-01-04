@@ -1,45 +1,34 @@
 import axios from "axios";
-import dotenv from "dotenv";
 
-if (!process.env.WEBHOOK_SERVER) {
-  dotenv.config();
-}
-
-export default function sendLNUrl({ accessToken, recipient, id }) {
+export default function sendKeysend({ accessToken, recipient }) {
   return new Promise(async (resolve, reject) => {
     try {
-      const [name, server] = recipient.destination.split("@");
-      const paymentUrl = `https://${server}/.well-known/lnurlp/${name}`;
+      // Throwing an error for testing purposes
+      // throw new Error("Intentional test error");
 
-      const res = await fetch(paymentUrl);
-      const data = await res.json();
+      let paymentData;
+      if (recipient.amount) {
+        const paymentRes = await axios.post(
+          "https://api.getalby.com/payments/keysend",
+          recipient,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
 
-      if (!data.callback) {
-        throw new Error("Callback URL missing in LNURLP response");
+        paymentData = paymentRes.data;
+      } else {
+        paymentData = { amount: 0, status: "no sats sent, amount too low" };
       }
-
-      const invoiceRes = await axios.get(`${data.callback}`, {
-        params: {
-          amount: recipient.amount * 1000,
-          comment: `${process.env.WEBHOOK_SERVER}/metadata/${id}`,
-        },
+      resolve({
+        success: true,
+        recipient: recipient,
+        paymentData,
       });
-      const invoiceData = await invoiceRes.json();
-      const invoice = invoiceData.pr;
-
-      const paymentRes = await axios.post(
-        "https://api.getalby.com/payments/bolt11",
-        { invoice },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
-
-      let paymentData = paymentRes.data;
-      resolve({ success: true, recipient, paymentData });
     } catch (error) {
-      console.log("Payment Process Error:", error.message || error);
-      resolve({ success: false, recipient });
+      console.log("Keysend Payment Error:", error.message || error);
+      let err = error.message || error;
+      resolve({ success: false, recipient, err });
     }
   });
 }
